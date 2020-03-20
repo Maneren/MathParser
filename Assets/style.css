@@ -1,0 +1,46 @@
+/* Made by Maneren */
+
+* {
+    padding: 0;
+    margin: 0;
+}
+
+body {
+    background: white;
+    color: black;
+    margin-top: 5vw;
+}
+
+button:active,
+input:focus {
+    outline: none;
+}
+
+.content {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+input {
+    width: 80%;
+    text-align: center;
+}
+
+#generate {
+    font-size: 1.1em;
+}
+
+.footer {
+    text-align: right;
+    font-size: 0.7em;
+    padding: 1em;
+    margin-top: 3em;
+    background-color: #eee;
+    width: 100vw;
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    border-top: 1px solid #aaa;
+}
