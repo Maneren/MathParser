@@ -1,3 +1,4 @@
+/* global Fraction */
 // Helper functions
 // Rounding with precision
 const round = (number, prec = 3) => {
@@ -5,6 +6,10 @@ const round = (number, prec = 3) => {
   const x = number * n;
   if (x % 1 < 0.5) return (x - x % 1) / n;
   else return (x - x % 1 + 1) / n;
+};
+
+const log = (x, base = 10) => {
+  return Math.log(x) / Math.log(base);
 };
 
 // logging utility
@@ -200,7 +205,7 @@ class Parser { // eslint-disable-line no-unused-vars
           temp += infix[++i];
           // Log.d("numberLoop", 'temp: "' + temp + '"');
         }
-        if (dec) postfix.push(new Parser.math.F(Number(temp)));
+        if (dec) postfix.push(new Parser.F(Number(temp)));
         else postfix.push(Number(temp));
         // Log.d("numberPush", 'temp: "' + temp + '"');
         this.__checkImplicitMult(infix, i, stack, postfix);
@@ -267,19 +272,19 @@ class Parser { // eslint-disable-line no-unused-vars
         if (op1 === undefined || op2 === undefined) throw new ParserError('Missing operand');
         switch (ch) {
           case '+':
-            stack.push(Parser.math.F.add(op1, op2));
+            stack.push(Parser.F.add(op1, op2));
             break;
           case '-':
-            stack.push(Parser.math.F.subtract(op1, op2));
+            stack.push(Parser.F.subtract(op1, op2));
             break;
           case '*':
-            stack.push(Parser.math.F.multiply(op1, op2));
+            stack.push(Parser.F.multiply(op1, op2));
             break;
           case '/':
-            stack.push(Parser.math.F.divide(op1, op2));
+            stack.push(Parser.F.divide(op1, op2));
             break;
           case '^':
-            stack.push(Parser.math.F.power(op1, op2));
+            stack.push(Parser.F.power(op1, op2));
             break;
         }
       } else if (isLetter(ch)) {
@@ -308,7 +313,7 @@ class Parser { // eslint-disable-line no-unused-vars
       if (typeof output === 'number') return round(output, this.precision);
       return output;
     } catch (error) {
-      if (error instanceof ParserError || error instanceof Parser.math.F.FractionError) {
+      if (error instanceof ParserError || error instanceof Parser.F.FractionError) {
         this.__errorHandler(error);
       } else {
         throw error; // re-throw the error unchanged
@@ -318,3 +323,19 @@ class Parser { // eslint-disable-line no-unused-vars
     }
   }
 }
+
+Parser.math = {
+  sin: Math.sin,
+  cos: Math.cos,
+  tan: Math.tan,
+  sind: x => Math.sin(x / 360 * Math.PI),
+  cosd: x => Math.cos(x / 360 * Math.PI),
+  tand: x => Math.tan(x / 360 * Math.PI),
+  sqrt: x => Parser.F.root(x, 2),
+  cbrt: x => Parser.F.root(x, 3),
+  PI: Math.PI,
+  e: Math.E,
+  log: (x, y) => log(x, y)
+};
+
+Parser.F = Fraction;

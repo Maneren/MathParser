@@ -244,7 +244,7 @@ class Fraction {
   }
 
   /**
-     * Raises x to power of b
+     * Raises x to power of y
      * @param {number|Fraction} x base
      * @param {number|Fraction} y exponent
      *
@@ -261,14 +261,23 @@ class Fraction {
     let result;
 
     if (isNumX && isNumY) return x ** y;
-    else if (isNumX && !isNumY) return x ** y;
-    else if (!isNumX && isNumY) {
+    else if (isNumX && !isNumY) {
+      return new Root(x ** y.a, y.b);
+    } else if (!isNumX && isNumY) {
       if (y < 0) {
         x = x.inversed;
         y *= -1;
       }
       result = new this(x.a ** y, x.b ** y);
-    } else return x ** y;
+    } else {
+      if (y.a === 1) {
+        return Fraction.root(x, y.b);
+      } else {
+        const newA = new Root(Fraction.power(x.a, y.a), y.b);
+        const newB = new Root(Fraction.power(x.b, y.a), y.b);
+        result = new Fraction(newA, newB);
+      }
+    }
 
     return this.reduce(result);
   }
@@ -290,12 +299,63 @@ class Fraction {
   }
 
   /**
+     * Takes yth root of x
+     *
+     * @param {number|Fraction} x radicand
+     * @param {number|Fraction} y degree of root
+     *
+     * @returns {number|Fraction} power
+     */
+  static root (x, y) {
+    this.typeCheck(x, y);
+
+    x = this.reduce(x);
+    y = this.reduce(y);
+
+    const isNumX = typeof x === 'number';
+    const isNumY = typeof y === 'number';
+    let result;
+
+    if (isNumX && isNumY) return new Root(x, y);
+    else if (isNumX && !isNumY) {
+      return new Root(Fraction.power(x.a, y.a), y.b);
+    } else if (!isNumX && isNumY) {
+      const newA = new Root(x.a, y);
+      const newB = new Root(x.b, y);
+      result = new Fraction(newA, newB);
+    } else {
+      const newA = new Root(Fraction.power(x.a, y.a), y.b);
+      const newB = new Root(Fraction.power(x.b, y.a), y.b);
+      result = new Fraction(newA, newB);
+    }
+
+    return this.reduce(result);
+  }
+
+  /**
+       * Wrapper for Fraction::power, modifies Fraction
+       * @param {number|Fraction} y degree of root
+       * @returns {Fraction} modified Fraction
+       */
+  root (y) {
+    const temp = Fraction.root(this, y);
+
+    this.a = temp.a;
+    this.b = temp.b;
+
+    this.reduce();
+
+    return this;
+  }
+
+  /**
      * Reduces given fraction
      * @param {number|Fraction} x fraction to reduce
      * @returns {number|Fraction} reduced fraction or its integer representation
      */
   static reduce (x) {
     if (typeof x === 'number') return x;
+    if (x.a instanceof Root || x.b instanceof Root) return x;
     if (!(x instanceof Fraction)) throw Error('Argument must be number or fraction');
     if (typeof x.a !== 'number' || typeof x.b !== 'number') {
       return this.reduce(
@@ -361,9 +421,9 @@ class Fraction {
      * @private
      */
   static typeCheck (x, y) {
-    const checkX = Number(x) !== undefined || x instanceof this;
-    const checkY = Number(y) !== undefined || y instanceof this;
-    if (!(checkX && checkY)) { throw new Error('All parameters must be integers or Fractions'); }
+    const checkX = Number(x) !== undefined || x instanceof Fraction || x instanceof Root;
+    const checkY = Number(y) !== undefined || y instanceof Fraction || y instanceof Root;
+    if (!(checkX && checkY)) { throw new Fraction.FractionError('All parameters must be integers or Fractions'); }
   }
 }
 
@@ -372,5 +432,37 @@ Fraction.FractionError = class extends Error {
     super();
     this.name = 'FractionError: ' + name;
   }
+};
+
+class Root { // eslint-disable-line no-unused-vars
+  constructor (radicand, degree) {
+    Root.typeCheck(radicand, degree);
+
+    this.rad = radicand;
+    this.deg = degree;
+
+    this.simplify();
+  }
+
+  toString () {
+    return `${this.rad}${this.deg === 1 ? '' : `^(1/${this.deg})`}`;
+  }
+
+  valueOf () {
+    return this.rad ** (1 / this.deg);
+  }
+
+  simplify () {
+    const numericalValue = (this.rad ** (1 / this.deg));
+    if (numericalValue % 1 === 0) {
+      this.rad = numericalValue;
+      this.deg = 1;
+    }
+  }
+
+  static typeCheck (x, y) {
+    const checkX = Number(x) !== undefined || x instanceof Fraction;
+    const checkY = Number(y) !== undefined || y instanceof Fraction;
+    if (!(checkX && checkY)) throw new Error('All parameters must be integers or Fractions');
+  }
 }
-;
